@@ -69,14 +69,29 @@ Ni*(t+1) = Ni*(t) + Bi*(t,Ni*(t)) - Di*(t,Ni*(t)) + BTi*(t,Ni*(t)) - DTi*(t,Ni*(
 
 And with this you can simulate the dynamics of the cancer cell population in each grid over time, taking into account the effects of treatment and the inherent birth and death rates of the cells.
 
-Even more importantly we can have Ni*(t+1, Ni*(t+1), A) = Ni*(t, Ni*(t), A) + Bi*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A) - Di*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A) + BTi*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A) - DTi*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A)
 
-Why Ni*(t+1) matter above? Because there is a limit to the number of cells due to resources and stuff. Will it also depend of N'(t+1)? Check later
+Let A be some sort of cell mutation or something like that. Then we have
+
+Even more importantly we can have Ni*(t+1, Ni*(t), A) = Ni*(t, Ni*(t-1), A) + Bi*(t, Ni*(t), Ni*(t, Ni*(t-1), A), A) - Di*(t, Ni*(t), Ni*(t, Ni*(t-1), A), A) + BTi*(t, Ni*(t), Ni*(t, Ni*(t-1), A), A) - DTi*(t, Ni*(t), Ni*(t, Ni*(t-1), A), A). The notation have usual meaning that is Ni(...,A) means only the cell with mutation A and so on
+
+Why Ni*(t) matter above? Because there is a limit to the number of cells due to resources and stuff. Will it also depend of N^(t)? Actually yes. IT should rely on N^(t) and N*(t) both and that is what we have done in the following equations
+
+Let N^(t) = N'(t) - N*(t). and Ni^(t) = Ni'(t) - Ni*(t) where N^(t) is the total number of non-cancer cells in the tumor mass at time t and Ni^(t) is the total number of non-cancer cells in grid i at time t. 
+
+Ni^(t+1) = Ni^(t) + Bi^(t,Ni^(t),Ni*(t)) - Di^(t,Ni^(t),Ni*(t)) + BTi^(t,Ni^(t),Ni*(t)) - DTi^(t,Ni^(t),Ni*(t)). The effect of drug on non cancer cell is pretty well established in literature so we can easily model it. No extra info needed
+
+N^(t) = Sum of Ni^(t) over all grids i. This gives us an estimate of the total number of non-cancer cells in the tumor mass at time t.
+
+Similarly we get the following
+
+Ni*(t+1) = Ni*(t) + Bi*(t, Ni^(t), Ni*(t)) - Di*(t, Ni^(t), Ni*(t)) + BTi*(t, Ni^(t), Ni*(t)) - DTi*(t, Ni^(t), Ni*(t))
+
+Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + Bi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) - Di*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) + BTi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) - DTi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A)
 
 As the treatment continues, we do the following :- 
 1. Run the model and decide on a suitable treatment
 2. Administer the treatment and monitor the tumor's response over time using non-invasive imaging techniques(Taking biopsy again and again is inhuman + this method starts of with a shit ton of biopsy at the start so not a good idea)
-3. Compare the predicted outcomes(Only geometric stuff) with the actual outcomes and adjust the model parameters as necessary to improve its accuracy.
+3. Compare the predicted outcomes(Only geometric stuff) with the actual outcomes and adjust the model parameters as necessary to improve its accuracy.If prediction is really diffrent from actual outcome, immediate biopsy is needed
 4. Repeat. 
 5. Sometimes we may also take another biopsy after a few sessions of the treatment to validate the population distribution and also fine tune the model parameters
 6. We may need to give them proper recovery time after each treatment session. I am not modeling that part here because no point. It is up to decision of doctor based on established literature and patient condition. But minimal rest is better which will hopefully happen due to the optimization of the treatment by reduced dosage and proper drug mix
