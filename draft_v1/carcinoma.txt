@@ -1,0 +1,88 @@
+For the sake of simplification and first draft purposes, we will assume that the carcinoma is a single well defined tumor mass with only one(Or none) necrotic core and assuming fat and scaffolding is distributed uniformly throughout the tumor
+We will assume that uniform blood flow wrt to the center. That is the blood flow is only a function of the distance from the center of the tumor and distance from the edge
+How is the center determined? We are taking the part that recieves the least blood flow as the center of the tumor. This is typically the area that is most hypoxic and has the highest concentration of necrotic tissue. 
+The center can be identified through imaging techniques such as MRI or CT scans, which can highlight areas of low perfusion and necrosis. 
+Additionally, histological analysis of biopsy samples can provide further confirmation of the tumor's center by identifying regions with the least viable cells and highest levels of necrosis.
+
+Biopsy method:-
+We didnt assume that the cells are uniformly distributed throughout the tumour, so we will take multiple biopsy samples from different regions of the tumor to ensure a representative analysis. 
+
+How to take the biopsy? 
+Options:-
+- Along the chord of the tumor, taking samples at regular intervals to cover the entire mass.
+- Radial sampling from the center to the periphery, ensuring that samples are taken from both the hypoxic core and the more vascularized outer regions.
+- Grid sampling, where the tumor is divided into a grid pattern and samples are taken from each section to provide a comprehensive overview of the tumor
+
+Grid sampling is more useful and more randomized but it is significanlty more challenging to implement in practice so we will ignore it for now
+
+So we will go with Radial and Chord sampling methods for our biopsy approach. We will compare the results afterwards
+
+What to do with the biopsy samples after analysing various cell features and putting it on proper table. Point to be noted:It is crucial that we preserve the spacial
+information of the biopsy samples to maintain the context of their origin within the tumor. Also the number of cells and the volume of necrotic tissue i.e dead are not included for obvious reason
+
+So like let's say there is a mutation A. Then if we find x number of cells with mutation A in the sample taken from a specific location of the biopsy X and 
+y number of cells with mutation A in the sample taken from another specific location of the biopsy Y, we need to record these findings along with their respective spatial coordinates.
+This will allow us to map the distribution of mutation A within the tumor and understand its heterogeneity.
+After we have collected and analyzed the biopsy samples, we will then proceed with determining the cell population in the tumor. How to? MRI and other scans can determine the amount of scafolding,fat and other structural component. 
+We remove these areas because we are concerned about the actual tumour cells. Point to be noted:Even after removing these areas, there may still be some non-tumor cells present in the samples, such as immune cells or stromal cells(MRI and other tech cant distinguish between these and tumor cells). 
+We calculate the remaining volume of the mass(V).
+From the biopsy samples, we remove the scafolding and fat components and count the number of cells present in each sample(Nb) and also the volume of these cells excluding scaffoding(VB)
+The total number of tumour cell is basically V*(Nb/VB). This gives us an estimate of the total tumor cell population within the mass.
+
+Now we divide the mass into countless grid. Yes, the biopsy samples also get divided into the same grid. The number of cells in each grid Vi*(Nb/VB) where Vi is the volume of grid i given that grid i is not part of the biopsy and Vi is the volume of grid i excluding the scaffolding and fat components.
+If grid i is part of the biopsy, then we can directly use the number of cells counted in that grid from the biopsy sample.
+
+Like this we get Ni = Number of cells in grid i but excludes the scaffolding and fat components. 
+
+Similarly we can do Ni* = Number of cancer cells(The deriviation is more or less similar as before. Just exclude the non cancer cell from the count during the biopsy)
+
+N* = Sum of Ni* over all grids i. This gives us an estimate of the total number of cancer cells in the tumor mass.
+N` = Sum of Ni over all grids i. This gives us an estimate of the total number of cells in the tumor mass.
+
+N* has other formula with V*((Nb*)/VB) and N` has other formula with V*((Nb)/VB). I am not sure which of them is better but we can compare the results(N* vs V*((Nb*)/VB) and N` vs V*((Nb)/VB)) of both mathamatically. This is important
+
+
+Interpolation:-
+Grids closer to each other have more similar cell populations than grids that are farther apart. Therefore, we can use interpolation techniques to estimate the number of cells in grids that were not directly sampled during the biopsy.
+We can apply distanced-based interpolation methods, such as inverse distance weighting or kriging, or even more complex bayesian model or ml model but that is for later. For now we will assume that the method is a blackbox and it gives us the entire tumour population distribution
+
+
+Modeling population:-We will assume outmigration and immigration of cells is negligible because it is actually negligible in context of solid mass
+
+So N* = Innitial population of cancer cells in the tumor mass + B* - D* where B* is the total number of cancer cells born and D* is the total number of cancer cells that died.
+
+Ni* = Innitial population of cancer cells in grid i + Bi* - Di* where Bi* is the number of cancer cells born in grid i and Di* is the number of cancer cells that died in grid i.
+
+There are already methodology on how to determine the birth and death rates of cancer cells based on the various factors using the biopsy samples
+
+But now we have to integrate the effect of a treatment which slows down or speeds up the birth and death rates of the cancer cells. This can be done by analyzing the properties of the treatment and simulation
+
+But the amount of treatment that reaches each grid will depend on the blood flow to that grid and other factors 
+
+So we will model it as follows:-
+
+Ni* = Innitial population of cancer cells in grid i + Bi* - Di* + BTi* - DTi* where BTi* is the number of cancer cells born in grid i due to treatment(Maybe negative if it stops the birth rate) and DTi* is the number of cancer cells that died in grid i due to treatment.
+
+Accounting for time and writing everything properly we have
+
+Ni*(t+1) = Ni*(t) + Bi*(t,Ni*(t)) - Di*(t,Ni*(t)) + BTi*(t,Ni*(t)) - DTi*(t,Ni*(t))
+
+And with this you can simulate the dynamics of the cancer cell population in each grid over time, taking into account the effects of treatment and the inherent birth and death rates of the cells.
+
+Even more importantly we can have Ni*(t+1, Ni*(t+1), A) = Ni*(t, Ni*(t), A) + Bi*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A) - Di*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A) + BTi*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A) - DTi*(t, Ni*(t+1), Ni*(t, Ni*(t), A), A)
+
+Why Ni*(t+1) matter above? Because there is a limit to the number of cells due to resources and stuff. Will it also depend of N'(t+1)? Check later
+
+As the treatment continues, we do the following :- 
+1. Run the model and decide on a suitable treatment
+2. Administer the treatment and monitor the tumor's response over time using non-invasive imaging techniques(Taking biopsy again and again is inhuman + this method starts of with a shit ton of biopsy at the start so not a good idea)
+3. Compare the predicted outcomes(Only geometric stuff) with the actual outcomes and adjust the model parameters as necessary to improve its accuracy.
+4. Repeat. 
+5. Sometimes we may also take another biopsy after a few sessions of the treatment to validate the population distribution and also fine tune the model parameters
+6. We may need to give them proper recovery time after each treatment session. I am not modeling that part here because no point. It is up to decision of doctor based on established literature and patient condition. But minimal rest is better which will hopefully happen due to the optimization of the treatment by reduced dosage and proper drug mix
+
+Goal with the simulation:-
+- Reduce the amount of chemo used to minimize side effects while still effectively targeting the tumor.
+- Optimize the treatment schedule to maximize the effectiveness of the therapy while minimizing harm to healthy tissue.
+- Understand the dynamics of tumor growth and response to treatment, which can inform future therapeutic strategies and improve patient outcomes.
+- Predict the response to different treatment scenarios and identify the most effective approaches and mix of drugs for a given tumor type and patient profile.
