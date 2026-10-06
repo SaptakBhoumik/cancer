@@ -88,6 +88,29 @@ Ni*(t+1) = Ni*(t) + Bi*(t, Ni^(t), Ni*(t)) - Di*(t, Ni^(t), Ni*(t)) + BTi*(t, Ni
 
 Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + Bi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) - Di*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) + BTi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) - DTi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A)
 
+
+
+Let Ii(t) = (Ni*(t, Ni^(t-1), Ni*(t-1), A1), Ni*(t, Ni^(t-1), Ni*(t-1), A2), ..., Ni*(t, Ni^(t-1), Ni*(t-1), An)) be the vector of cancer cell populations with different combitorial combo of mutations at time t. 
+
+Updated equations for the cancer cell populations with different mutations can be written as:
+
+Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + Bi*(t, Ni^(t), Ni*(t), Ii(t), A) - Di*(t, Ni^(t), Ni*(t), Ii(t), A) + BTi*(t, Ni^(t), Ni*(t), Ii(t), A) - DTi*(t, Ni^(t), Ni*(t), Ii(t), A)
+
+Why? Because one mutation can transition to another mutation
+
+Note:- If A, B are 2 diffrent mutation then I includes just A, just B, both A and B or none of these mutation(Catch box for other mutation). So if we have 2 mutations then we have 4 different types of cells. This can overshoot really fast so best is that we consider the most dominant ones
+
+Cell to volume:-
+
+Vi_total(t) = Ni*(t) * (Volume of individual cancer cell+Necessary packing) + Ni^(t) * (Volume of individual healthy cell+Necessary packing) + Ri(t) + Si(t) + Ei(t)
+
+Ri(t) = Volume of dead cell debris in grid i at time t
+Si(t) = Volume of scaffolding and fat components in grid i at time t
+Ei(t) = Due to fluid accumulation and other stuff in grid i at time t
+
+NOTE:Under drug/treatment, the volume of cell is not constant. It can change due to various factors such as cell swelling, shrinkage, or changes in the extracellular matrix. We are taking it constant for now because I doubt gettinf that information is possible. But this is something to keep in mind
+
+
 As the treatment continues, we do the following :- 
 1. Run the model and decide on a suitable treatment
 2. Administer the treatment and monitor the tumor's response over time using non-invasive imaging techniques(Taking biopsy again and again is inhuman + this method starts of with a shit ton of biopsy at the start so not a good idea)
