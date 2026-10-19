@@ -123,12 +123,58 @@ Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + TBi*(Ni^(t), Ni*(t
 TBi* relies on (Ni^(t), Ni*(t), Ii(t), A, FRi(t), C(t)) and this needs a transition matrix
 TDi* relies on (Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A, FRi(t), C(t)) and this doent needs a transition matrix
 
-Treating TBi* and TDi* as blackbox for now
-
-TODO:What about delayed effects of chemo?
-
+Treating TBi* and TDi* as blackbox for now. Will think about it after sometime. But it is much more refined right now
 
 Note:- If A, B are 2 diffrent mutation then I includes just A, just B, both A and B or none of these mutation(Catch box for other mutation). So if we have 2 mutations then we have 4 different types of cells. This can overshoot really fast so best is that we consider the most dominant ones
+
+What about delayed effects of chemo?
+
+Now this is where complication start. We have to be careful about this parts. I think it will need a really heavy change because I will try to transition to a complete marcov chain based model
+No more demographic stuff(I mean they are still there but hidden in transition matrix)
+
+Let's say we have mutation A and mutation B. 
+
+Let's define a few notations:-
+H_A = Healthy cell with mutation A but no mutation B
+Dk_A = Damanged cell due to drug with mutation A but no mutation B at stage k of damage. (k=1,2,3,...,n) where n is the maximum stage of damage before cell death(Once Dn_A is reached the cell will definately die). D1_A is the first stage of drug damage.
+S_A = Senescence cell with with mutation A but no mutation B
+
+-> := THis notation when used with A -> B means that the cell with mutation A transitions to a cell with mutation B. It is the same cell not a new cell
+-N-> = This notation when used with A -N-> B means that the cell with mutation A transitions to a cell with mutation B. It is a new cell not the same cell
+
+In my notation if a cell divides, the bigger original parent is gone. And the new cells are children. Say based on that
+
+Therefore we have the following possible transitions for a cell with mutation A under the influence of a drug:
+H_A -> H_A (Persistence)
+Dk_A -> Dk_A (Persistence. Even valid for k = n. It just means the time rate is not long enough for the death to occur yet)
+S_A -> S_A (Persistence)
+H_A -N-> H_A
+H_A -N-> H_B
+H_A -> D1_A
+H_A -> D1_B
+Dk_A -> D(k+1)_A for k=1,2,...,n-1
+Dk_A -> H_A for k=1,2,...,n-1
+Dk_A -> H_B for k=1,2,...,n-1
+Dk_A -> S_A for k=1,2,...,n-1
+Dn_A -> Death
+H_A -> Natural Death
+S_A -> Slow death
+
+The following should be rarer transitions(As per my understanding), but they are possible but can be ingored in certain cases. I am just writing it for now:
+Dk_A -N-> H_A for k=1,2,...,n-1
+Dk_A -N-> H_B for k=1,2,...,n-1
+Dk_A -N-> D1_A for k=1,2,...,n-1
+Dk_A -N-> D1_B for k=1,2,...,n-1 
+Dk_A -N-> S_A for k=1,2,...,n-1
+Dk_A -N-> S_B 
+H_A -N-> S_A 
+H_A -N-> S_B 
+H_A -> S_A (Not S_B because same cell mutation to S_B is not possible)
+Dk_A -N-> Mitotic catastrophe: the division fails, no viable children. Why is it rare? I think Dn_A -> Death is more likely to happen. for k=1,2,...,n-1
+
+I am not writing for just B because it is same. Similarly it is same for AB(Both A and B), None etc. You get the idea. It is easy to extend from here
+
+It has the same constraints as that of any transition matrix so not writing it explicitely
 
 Cell to volume:-
 
