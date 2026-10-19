@@ -98,6 +98,36 @@ Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + Bi*(t, Ni^(t), Ni*
 
 Why? Because one mutation can transition to another mutation
 
+Updated equation
+Ni*(t+1) = Sumation of Ni*(t+1, Ni^(t), Ni*(t), A) over all mutation types A. This should be more accurate representation
+
+Now I realize that that DTi* and Di* should not rely on Ii(t) because the death rate of a cell with mutation A should not depend on the population of cells with mutation B. So we can update the equation as follows
+Updated equation:-
+Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + Bi*(t, Ni^(t), Ni*(t), Ii(t), A) - Di*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A) + BTi*(t, Ni^(t), Ni*(t), Ii(t), A) - DTi*(t, Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A)
+
+
+I now realize something. t is redudant in Bi*,Di*,BTi* and DTi*.
+
+Let C(t) = Concentration of each drug in blood stream in time t. It is a vector of concentrations
+Let FRi(t) = Flow rate of blood in grid i
+
+Updated equation:-
+Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + Bi*(Ni^(t), Ni*(t), Ii(t), A, FRi(t)) - Di*(Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A, FRi(t)) + BTi*(Ni^(t), Ni*(t), Ii(t), A, FRi(t), C(t)) - DTi*(Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A, FRi(t), C(t))
+
+But now I realize that seperating Bi* and BTi* is not really necessary. Similarly seperating Di* and DTi* is not really necessary.
+
+Let TBi* = Bi* + BTi* and TDi* = Di* + DTi*. Then we have
+
+Ni*(t+1, Ni^(t), Ni*(t), A) = Ni*(t, Ni^(t-1), Ni*(t-1), A) + TBi*(Ni^(t), Ni*(t), Ii(t), A, FRi(t), C(t)) - TDi*(Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A, FRi(t), C(t))
+
+TBi* relies on (Ni^(t), Ni*(t), Ii(t), A, FRi(t), C(t)) and this needs a transition matrix
+TDi* relies on (Ni^(t), Ni*(t), Ni*(t, Ni^(t-1), Ni*(t-1), A), A, FRi(t), C(t)) and this doent needs a transition matrix
+
+Treating TBi* and TDi* as blackbox for now
+
+TODO:What about delayed effects of chemo?
+
+
 Note:- If A, B are 2 diffrent mutation then I includes just A, just B, both A and B or none of these mutation(Catch box for other mutation). So if we have 2 mutations then we have 4 different types of cells. This can overshoot really fast so best is that we consider the most dominant ones
 
 Cell to volume:-

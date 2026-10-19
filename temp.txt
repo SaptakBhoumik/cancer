@@ -1,0 +1,27 @@
+Needed before the model can run
+
+Capacity and expanding border. This is the biggest gap. Nothing yet defines the local capacity Kᵢ, the cap on births at the remaining room, or the rule for when a grid pushes its neighbors outward (and the reverse when the tumor shrinks). Vᵢ_total is computed from counts, so it needs a rule for what happens when it exceeds the grid’s physical space.
+Treatment terms. BT and DT have no functional form. You need the exposure per grid as a function of position and time (dose, clearance, perfusion), and then how exposure changes the birth and death rates. This is also the weakest data link, so decide where the dose-response numbers come from.
+Transition matrix for the mutation types. Cells leaving one type must enter another, and the rate should scale with births. You’ve already noted this one.
+Dynamics for Rᵢ and Eᵢ. Rᵢ needs inflow from cell kill and a clearance term, and Eᵢ needs a simple rule. Both need initial values from the first scan.
+A defined volume-to-observation step. The line defining total tumor volume V(t) = Σᵢ Vᵢ_total(t) disappeared, and step 3 still doesn’t say what exactly is compared with MRI (total volume, boundary, necrotic extent).
+Effective volume per cell. Replace “volume + necessary packing” with one effective number per grid, backed out from VB/Nb and the t=0 scan.
+
+Needed for the goals to be real
+
+An optimization formulation. The goals are still sentences. A first version could be “minimize total dose subject to N* below a threshold by time T, with a max dose per cycle and a minimum rest interval as constraints.”
+The correction rule in step 3. Decide which few parameters may be tuned from the volume mismatch (for example, one growth rate and one sensitivity per dominant clone) and hold the rest fixed.
+The biopsy trigger threshold. “Really different” needs a number tied to MRI error and model uncertainty.
+A validation benchmark. Does the model predict volume at the next scan better than extrapolating the last two scans?
+
+Initial estimation
+
+Bounded fraction. Interpolate the cancer fraction (bounded 0 to 1) and total density, so Nᵢ* ≤ Nᵢ and Nᵢ^ never goes negative.
+Pooled vs. grid-sum comparison and radial vs. chord sampling. This is best done on a synthetic tumor with a known ground truth.
+
+Deferred or cleanup
+
+The in-tumor immune and stromal response. The text still says “no extra info needed,” which you’ve said is for later.
+The t-1 arguments and left-hand-side notation.
+Labeling the early equation versions as first-pass.
+Time step size, and what the grid resolution is.
