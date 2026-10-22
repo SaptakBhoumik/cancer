@@ -176,6 +176,40 @@ I am not writing for just B because it is same. Similarly it is same for AB(Both
 
 It has the same constraints as that of any transition matrix so not writing it explicitely
 
+From now on Ii(t) = (Ni*(t, Ni^(t-1), Ni*(t-1), H_A), Ni*(t, Ni^(t-1), Ni*(t-1), D1_A), ..., ) Basically all the states are in Ii(t)
+
+The transition matrix is a conditional distribution on blood flow rate, drug concentration and more. I am not writing it explicitely but assume that there is a conditional thing attached. 
+
+We want a markov chain. H_A, Dk_A etc etc are all the valid states of the transition matrix T given some condition. The transition matrix is conditional to blood flow rate, drug concentration and all that
+
+Let's define T(s1,s2) = Prob of going from state s1 to state s2 in one time step given the condition
+
+Define reward of going from state s1->s2 as the number of cell we get out of that cell. For example take the following
+- H_A -> D1_A is +1 because we still have the same cell. 
+- H_A -> death is 0 cuz one less cell. I.e it no longer counts to the population. Then we have 0
+- H_A -N-> H_A is +2 because we have 2 cells now. Note:Sometimes it can be more than 2 but that is rare so we can ignore it but few people may not ignore it
+
+Now a cancerous tissue has thousands of cell. So it we we want to find Ni*(t, Ni^(t-1), Ni*(t-1), s) we just do the following
+- Run the markov chain on all the cell(Each cell is at diffrent innitial state)
+- The cell then goes to a new state and we have some reward
+- Ni*(t, Ni^(t-1), Ni*(t-1), s) = Sum of reward when the new state is s
+Now the above works but doing it for every cell is ineffecient so we can optimize it mathamitically since we are only concerned about the count
+
+Time is discrete. At each step, the transition probabilities T are evaluated using the state counts at time t (including crowding) and are held fixed for that step. 
+Conditional on these probabilities, cells make their transitions independently of each other. Dependence between steps comes only through the updated counts
+
+Let's take the initial state si 
+Let Indicator_i_k = (Indicator_i_1_k, Indicator_i_2_k, ..., Indicator_i_m_k) ~ Multinomial(1, (T(si,s1), T(si,s2), ..., T(si,sm))) where m is the number of states. k=1,2,...,Ni*(t, Ni^(t-1), Ni*(t-1), si) i.e this is the kth indicator of cell with innitial stat si
+Sum_Indicator_i = Sum of Indicator_i_k over all k = (Sum_Indicator_1_i, Sum_Indicator_i_2, ..., Sum_Indicator_i_m) ~ Multinomial(Ni*(t, Ni^(t-1), Ni*(t-1), si), (T(si,s1), T(si,s2), ..., T(si,sm)))
+Sum_Indicator_i is independent wrt i
+
+S_j = Sum of r(si,sj)*Sum_Indicator_i_j over all valid i. This is much more efficient than running the markov chain on every cell because Sum_Indicator_i are independent so working with it is simpler.
+And given their independence we can find E(S_j) and Var(S_j) very easily
+I think Ni*(t, Ni^(t-1), Ni*(t-1), sj) = E(S_j) is a good model for inference but Ni*(t, Ni^(t-1), Ni*(t-1), s) = S is nice for theory. I am keeping both. Will see which is more useful
+This is much more efficient than running the markov chain on every cell because Sum_Indicator_i are independent. 
+
+Current issue I have to solve later:-For persistance, certain cell are older than other. So based on the age of the cell, the transition probability may change. I will think about it tomorrow. Not now. But this is what I have now
+
 Cell to volume:-
 
 Vi_total(t) = Ni*(t) * (Volume of individual cancer cell+Necessary packing) + Ni^(t) * (Volume of individual healthy cell+Necessary packing) + Ri(t) + Si(t) + Ei(t)
