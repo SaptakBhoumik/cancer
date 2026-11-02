@@ -214,10 +214,10 @@ Sum_Indicator_i is independent wrt i
 
 S_M = Sum of r(si->sj,M)*Sum_Indicator_i_j over all valid i and j. This is much more efficient than running the markov chain on every cell because Sum_Indicator_i are independent so working with it is simpler.
 And given their independence we can find E(S_M) and Var(S_M) very easily
-I think Ni*(t+1, Ni^(t), Ni*(t), M) = E(S_M) is a good model for inference but Ni*(t+!, Ni^(t), Ni*(t), M) = S_M is nice for theory. I am keeping both. Will see which is more useful
+I think Ni*(t+1, Ni^(t), Ni*(t), M) = E(S_M) is a good model for inference but Ni*(t+1, Ni^(t), Ni*(t), M) = S_M is nice for theory. I am keeping both. Will see which is more useful
 This is much more efficient than running the markov chain on every cell because Sum_Indicator_i are independent. 
 
-Current issue I have to solve later:-For persistance, certain cell are older than other. So based on the age of the cell, the transition probability may change. I will think about it tomorrow. Not now. But this is what I have now
+New problem:-For persistance, certain cell are older than other. So based on the age of the cell, the transition probability may change. I will think about it tomorrow. Not now. But this is what I have now
 What I think I can do:-Introduce more states, namely, H1_A, H2_A, ..., Hn_A where n is the maximum age of a cell till it remains healthy(Can reproduce or die) and S1_A, S2_A, ..., Sm_A where m is the maximum age of a senescence cell. 
 I am not explicietly writing it but usual sane transition rules apply. Only thing to keep in mind is that Hi_M->Hj_M, Si_M->Sj_M, Di_M->Dj_M is valid only if i<j(For same gene persistance. KEYPOINT:SAME GENE and it is j = i+1).
 This way we can model the age of the cell and its effect on the transition probabilities. In certain cases we may need the total number of healthy cells with mutation A. We can just add the ones from H1_A,......Hn_A
@@ -225,16 +225,28 @@ Dk_A -> H?_A I think it should be H1_A
 TODO:But this will increase the state space significantly so I will have to think about it more. Possible solution:Tissue culture to simply get more sample or simpler, instead of one giant markov chain, use multiple smaller mutli stage markov chain. I am well aware of this issue and will think in future
 
 
-In case you want the number of deaths well death is also modeled as a seperate variable so that is not a problem. It can be easily found with same formula. 
-But if you want the number of birth, well it is a bit complecated but not impossible. B_M = Sum of r(si->sj,M)*Sum_Indicator_i_j over all valid i and j where sj is a tuple that contains M. B_M can be used to model birth. E(B_M) is useful for inference
-TODO:Modify the formula to make sure that birth means death of the parent so that 2 or more daughter cells are formed. This is necessary so that the demographic formulas hold
+
+New update:-When a cell is born then we consider the 2 new cell as birth and the original cell as dead. SO based on that we have to update the death and birth formula
+B(t+1, Ni^(t), Ni*(t), M) = Sum of r(si->sj,M)*Sum_Indicator_i_j over all valid i and j where sj is a tuple that contains M
+D(t+1, Ni^(t), Ni*(t), M) = Sum_Indicator_M_Death + (Sum of Sum_Indicator_M_j where j is any tuple)
+I(t+1,Ni^(t),N*(t),M) = Sum of r(si->sj,M)*Sum_Indicator_i_j over all valid i and j where si is not M and sj is not a tuple(I.e no birth is counted here)
+O(t+1,Ni^(t),N*(t),M) = Sum of Sum_Indicator_M_j over all valid j where sj is not M and sj is not a tuple(I.e no birth is counted here) and not death
+
+B(...) = Number of cells of type M that are born in the current time step
+D(...) = Number of cells of type M that die in the current time step
+I(...) = Number of cells of type M that are introduced into the population from other types in the current time step
+O(...) = Number of cells of type M that are removed from the population to other types in the current time step
+
+Population relation:- Ni(t+1, Ni^(t), Ni*(t), M) = Ni*(t, Ni^(t-1), Ni*(t-1), M) + B(t+1, Ni^(t), Ni*(t), M) - D(t+1, Ni^(t), Ni*(t), M) + I(t+1,Ni^(t),N*(t),M) - O(t+1,Ni^(t),N*(t),M)
+
+We can estimate by their mean or keep the randomness. 
+
 
 Regarding death as a state:-
 Mitotic catastrophe also falls under death. But setting that aside. T(Death,Death) = 1. But when we run the simulation, we dont consider the already dead cells when running the next timestep after getting the transition matrix(Unnecessary computation+although it acts like a state of cell mutation or reproduction, it is not really a state).
 The only time we are interested in the number of dead cell, is the number of cells that died in the last time step. So not a true state, just that it is easier and more intutive to write like this
 
-TODO:When cell die, they release harmful chemicals that can affect the probabilities. Consider it in future
-
+TODO:When cell die, they release harmful chemicals that can affect the probabilities. Consider it in future 
 Cell to volume:-
 
 Vi_total(t) = Ni*(t) * (Volume of individual cancer cell+Necessary packing) + Ni^(t) * (Volume of individual healthy cell+Necessary packing) + Ri(t) + Si(t) + Ei(t)
