@@ -209,7 +209,7 @@ Conditional on these probabilities, cells make their transitions independently o
 
 Let's take the initial state si 
 Let Indicator_i_k = (Indicator_i_1_k, Indicator_i_2_k, ..., Indicator_i_m_k) ~ Multinomial(1, (T(si,s1), T(si,s2), ..., T(si,sm))) where m is the number of states. k=1,2,...,Ni*(t, Ni^(t-1), Ni*(t-1), si) i.e this is the kth indicator of cell with innitial stat si
-Sum_Indicator_i = Sum of Indicator_i_k over all k = (Sum_Indicator_1_i, Sum_Indicator_i_2, ..., Sum_Indicator_i_m) ~ Multinomial(Ni*(t, Ni^(t-1), Ni*(t-1), si), (T(si,s1), T(si,s2), ..., T(si,sm)))
+Sum_Indicator_i = Sum of Indicator_i_k over all k = (Sum_Indicator_i_1, Sum_Indicator_i_2, ..., Sum_Indicator_i_m) ~ Multinomial(Ni*(t, Ni^(t-1), Ni*(t-1), si), (T(si,s1), T(si,s2), ..., T(si,sm)))
 Sum_Indicator_i is independent wrt i
 
 S_M = Sum of r(si->sj,M)*Sum_Indicator_i_j over all valid i and j. This is much more efficient than running the markov chain on every cell because Sum_Indicator_i are independent so working with it is simpler.
@@ -232,12 +232,14 @@ D(t+1, Ni^(t), Ni*(t), M) = Sum_Indicator_M_Death + (Sum of Sum_Indicator_M_j wh
 I(t+1,Ni^(t),N*(t),M) = Sum of r(si->sj,M)*Sum_Indicator_i_j over all valid i and j where si is not M and sj is not a tuple(I.e no birth is counted here)
 O(t+1,Ni^(t),N*(t),M) = Sum of Sum_Indicator_M_j over all valid j where sj is not M and sj is not a tuple(I.e no birth is counted here) and not death
 
+NOTE:Here M means a specific age and not agreegate. I.e we may mean H1_A or H2_A but not H_A
+
 B(...) = Number of cells of type M that are born in the current time step
 D(...) = Number of cells of type M that die in the current time step
-I(...) = Number of cells of type M that are introduced into the population from other types in the current time step
-O(...) = Number of cells of type M that are removed from the population to other types in the current time step
+I(...) = Number of cells of type M that are introduced into the population from other types in the current time step + cell who aged into it from the younger group
+O(...) = Number of cells of type M that are removed from the population to other types in the current time step + cell who aged out into the older group
 
-Population relation:- Ni(t+1, Ni^(t), Ni*(t), M) = Ni*(t, Ni^(t-1), Ni*(t-1), M) + B(t+1, Ni^(t), Ni*(t), M) - D(t+1, Ni^(t), Ni*(t), M) + I(t+1,Ni^(t),N*(t),M) - O(t+1,Ni^(t),N*(t),M)
+Population relation:- Ni*(t+1, Ni^(t), Ni*(t), M) = Ni*(t, Ni^(t-1), Ni*(t-1), M) + B(t+1, Ni^(t), Ni*(t), M) - D(t+1, Ni^(t), Ni*(t), M) + I(t+1,Ni^(t),N*(t),M) - O(t+1,Ni^(t),N*(t),M)
 
 We can estimate by their mean or keep the randomness. 
 
