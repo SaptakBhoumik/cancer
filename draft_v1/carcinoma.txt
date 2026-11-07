@@ -222,8 +222,6 @@ What I think I can do:-Introduce more states, namely, H1_A, H2_A, ..., Hn_A wher
 I am not explicietly writing it but usual sane transition rules apply. Only thing to keep in mind is that Hi_M->Hj_M, Si_M->Sj_M, Di_M->Dj_M is valid only if i<j(For same gene persistance. KEYPOINT:SAME GENE and it is j = i+1).
 This way we can model the age of the cell and its effect on the transition probabilities. In certain cases we may need the total number of healthy cells with mutation A. We can just add the ones from H1_A,......Hn_A
 Dk_A -> H?_A I think it should be H1_A
-TODO:But this will increase the state space significantly so I will have to think about it more. Possible solution:Tissue culture to simply get more sample or simpler, instead of one giant markov chain, use multiple smaller mutli stage markov chain. I am well aware of this issue and will think in future
-
 
 
 New update:-When a cell is born then we consider the 2 new cell as birth and the original cell as dead. SO based on that we have to update the death and birth formula
@@ -248,7 +246,78 @@ Regarding death as a state:-
 Mitotic catastrophe also falls under death. But setting that aside. T(Death,Death) = 1. But when we run the simulation, we dont consider the already dead cells when running the next timestep after getting the transition matrix(Unnecessary computation+although it acts like a state of cell mutation or reproduction, it is not really a state).
 The only time we are interested in the number of dead cell, is the number of cells that died in the last time step. So not a true state, just that it is easier and more intutive to write like this
 
+Two stage markov chain:-
+
+Instead of one giant transition matrix T(si,sj), we split every step into 2 stages. This is exact, not an approximation.
+Technically we could have done it in a single matrix but this is just more interpretable + makes it easier for us to trim the number of parameter needed. 
+It is just the chain rule:
+
+Stage 1:- Which event happens to the cell
+Events = (Death, Reproduce, Persist, Progress, Transformation, Damage, Repair, Senesce)
+- Persist = Same genotype, same phase(H/D/S), age goes up by 1. Persistence always means you age up. So P(Persist) = 0 for the last allowed age of a phase (Hn, Dn, Sm)
+- Damage = Hk -> D1. Genotype remains same
+- Repair = Dk -> H1. Genotype remains same
+- Senesce = Hk -> S1 or Dk -> S1. Genotype remains same
+- Transformation = Any transition where the genotype changes. Example H1_A -> D1_B is a Transformation. Not Damage. So is H1_A -> H1_B. This is the only reason Damage, Repair and Senesce dont need a genotype draw
+- Reproduce = Parent is gone, children are new cells (tuple)
+- Death = Natural death, drug death, mitotic catastrophe, slow death of senescent cell. All of them are Death
+Stage 1 is where blood flow, drug concentration, crowding and all that act. This is the part that needs to be fitted. For each (phase, age, genotype) the probabilities of the allowed events sum to 1.
+Which events are allowed for which phase is decided by experts. Not allowed = exactly 0.
+Note:- Dn must not persist, so it can only die (or repair, senesce, transform, reproduce if allowed). Same for the last age of H and S.
+
+Stage 2:- Given the event, what is the exact next state
+- Persist, Death, Damage, Repair, Senesce = No draw needed. Next state is fully decided by the event (Genotype same, age resets to 1 or goes up by 1 as above, Death just means the cell is gone)
+- Transformation = Draw the new state from a small table for that parent state. Only entries where genotype changes
+- Reproduce = Draw the tuple of children from a small table for that parent state. 
+For stage 2 of Transformation and Reproduce also we need to consider the effect of blood flow, drug concentration, crowding and all that. So the tables are conditional on these factors.
+
+T(si,sj) = P(event e | si) * P(sj | si, e) where e is the event that happened to the cell in stage 1
+
+If e is persist,death,damage,repair or senesce then P(sj | si, e) = 1 if sj is the next state of si given the event e and 0 otherwise. So we dont need to draw anything for these events.
+
+After this we can just use the same method as before to get the population of each state
+
+But there is a huge issue right now. Drug affect pace of damage progression. Right now Dk -> D(k+1) is a persist so it advances every step unless repair/senesce/transform/die/reproduce. If drug change pace, that that has to be reflected
+
+New update:-
+OTher than that I realize that healthy cell without damage(As impleied by Hk_M system) is not possible to die. Cells dont care about age. They care about age when dying. Yes there is a huge correlation with time but it is a huge mistake
+I think a better model for cell is to have k_M where M is mutation and k is the stage of damage instead of Hk_M and Dk_M seperately. So 0_M means completely healty cell, 1_M means a cell is a bit damaged and so on. But there is a upper limit to the amound of damage before death is inevitabel
+Furthermore we will no longer have Sk_M instead we will treat senescence as a property of mutation M. So we can have 2_sB to represent a senescent cell with mutation B at damage state 2. 
+
+Now we have to update the Stage 1 and Stage 2 of the markov chain
+- Persist = Same genotype, but it is not neccesarily +1 on damage. It is now a combo of damage and repair. Because both of them happen in parallel so the net effect should be considered
+- Senesce = Same genotype but with senescence property. The damage of this cell depends on the current  damage and other stuff
+- Mutation = Any transition where the genotype changes. 
+- Reproduce = Parent is gone, children are new cells (tuple)
+- Death = Natural death, drug death, mitotic catastrophe, slow death of senescent cell. All of them are Death
+
+As for stage 2:-
+- Persist, Senense = We just have to draw the new damage state given the current damage and the current mutation of the cell and the usual drug, blood flow etc etc. 
+- Mutation needs to draw the new mutation. The probability of these mutation relies on the usual drug, blood flow etc etc but it also relies on the current damage and the current mutation of the cell
+- Reproduction needs to draw 2 or more new mutation. The probability of these mutation relies on the usual drug, blood flow etc etc but it also relies on the current damage and the current mutation of the cell. Note:The mutation of the children are not independent to each other so you must draw them as a tuple
+- Death = No draw needed
+
+
+
+As for stage 3:-
+- Persist, Senense = No draw needed.
+- Mutation needs to draw the new damage state here. The probability of these state relies on the usual drug, blood flow etc etc but it also relies on the current damage, the current mutation and the mutation we just drew in stage 2 of the cell. After that we combine the mutation and damage to get the final state
+- Reproduction needs to draw the new damage state here. The probability of these state relies on the usual drug, blood flow etc etc but it also relies on the current damage, the current mutation and the mutation we just drew in stage 2 of the cell. After that we combine the mutation and damage to get the final state. Note:Here we are concerned about the mutation of the specific daugher cell for which we are computing the damage for but in certain cased we may include both the daughter's mutation
+- Death = No draw needed
+
+For Persist, Senense in stage 2 and Reproduction,Mutation in stage 3, we may explore methods other than markov chain to draw the damage level. The only think we have to make sure is that this new model also gives me a probability
+
+Regarding mutation, You can say the mutation and damage are so jointly dependent that we cant divide it into stage 2 and 3 
+Same reason applies for reproduction
+
+T(si,sj) = P(event e1 | si) * P(mutation e2 | si, e1) * P(sj | si, e1, e2)  where e1 is reproduction or mutation
+           P(event e1 | si) * P(sj | si, e1)  where e1 is persist or senesce
+           P(sj | si)  where sj is death
+
+And that should solve all my issue
+
 TODO:When cell die, they release harmful chemicals that can affect the probabilities. Consider it in future 
+
 Cell to volume:-
 
 Vi_total(t) = Ni*(t) * (Volume of individual cancer cell+Necessary packing) + Ni^(t) * (Volume of individual healthy cell+Necessary packing) + Ri(t) + Si(t) + Ei(t)
